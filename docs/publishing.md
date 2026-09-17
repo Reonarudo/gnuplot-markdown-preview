@@ -16,3 +16,7 @@ For an initial interactive release, Microsoft's documented PAT path remains avai
 **Azure DevOps global PATs retire December 1, 2026.** Migrate to an authorized Entra publishing identity before then. Add the identity to the Marketplace publisher with the Contributor role, then use `vsce publish --azure-credential`. No PAT-dependent automatic Marketplace workflow is configured here.
 
 References: [Microsoft publishing guide](https://code.visualstudio.com/api/working-with-extensions/publishing-extension), [publisher management](https://marketplace.visualstudio.com/manage/publishers/).
+
+## Direct upload without an Azure DevOps PAT
+
+Microsoft also supports uploading the exact tested VSIX at the Marketplace publisher management page: select **ReoX86**, choose **New extension → Visual Studio Code**, select the release asset, and publish it. Sign-in can redirect through Microsoft's `app.vssps.visualstudio.com` identity service. This method does not require provisioning an Azure DevOps organization or changing an existing Azure directory. Use the Microsoft account authorized for this publisher.
