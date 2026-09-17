@@ -1,0 +1,16 @@
+**
+!dist/**
+!media/icon.png
+!media/preview.css
+!package.json
+!README.md
+!CHANGELOG.md
+!LICENSE
+!THIRD_PARTY_NOTICES.md
+!vendor/gnuplot/Copyright
+!vendor/gnuplot/*-LICENSE
+!vendor/gnuplot/MUSL-COPYRIGHT
+!vendor/gnuplot/SOURCE-NOTICES.txt
+!vendor/gnuplot/SHA256SUMS
+vendor/gnuplot/gnuplot.mjs
+vendor/gnuplot/gnuplot.wasm
