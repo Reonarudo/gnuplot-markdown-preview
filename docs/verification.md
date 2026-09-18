@@ -11,4 +11,11 @@ Verified on macOS arm64 with VS Code 1.137.0 and Node 24.21.0 (2026-09-17).
 - Initial VSIX startup encountered one three-second timeout during heavy host startup. Reloading the window recovered and all four plots rendered. Standalone measurements on the same machine: simple plot 147 ms, 3D plot 52 ms. The documented time budget intentionally bounds work under load.
 - GitHub CI passed all checks, including extracted-VSIX rendering, on Ubuntu.
 
-Marketplace authentication, publication, and installation are separate release steps and must be verified before claiming the full lifecycle complete.
+## Marketplace verification (2026-09-18)
+
+- Published v0.1.0 through the personal Microsoft account that owns ReoX86. No university tenant resources or publishing identities were used.
+- The [public listing](https://marketplace.visualstudio.com/items?itemName=ReoX86.gnuplot-markdown-preview) shows the correct publisher, identifier, version, icon, README, repository, and license links.
+- Installed by extension ID into an isolated VS Code environment. The first attempt returned a local signature-verifier `UnknownError` with `Executed: false`; a diagnostic retry succeeded with `Executed: true`, signature integrity/validity/trust checks passing, and no security settings changed.
+- VS Code installation metadata confirms `source: gallery`, version `0.1.0`. All 17 installed asset files match the GitHub release VSIX byte-for-byte; publisher and version in the manifest were checked separately.
+- Activated the Marketplace-installed entry point and rendered the complete demo: four SVG plots, one localized error, and intact Swift/JavaScript fences passed.
+- The final visual check inside the isolated Marketplace-installed VS Code window is pending. UI control stopped because another project window was active; the earlier development-host and local-VSIX visual checks remain valid but are separate checks.

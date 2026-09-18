@@ -4,7 +4,7 @@ Release identity: `ReoX86.gnuplot-markdown-preview`. Repository owner: `Reonarud
 
 1. Run CI checks, package, and `npm run test:package`. Install the VSIX in VS Code and inspect the built-in Markdown Preview.
 2. Push the matching `v0.1.0` tag. The release workflow repeats checks, tests the packaged extension, and attaches its VSIX and SHA-256 digest to the GitHub Release.
-3. Download that release asset, run `npm run test:package -- /path/to/asset.vsix`, and install it in VS Code. Publish **that same file** with `npx vsce publish --packagePath /path/to/asset.vsix` (or add `--azure-credential` for an authorized Entra identity).
+3. Download that release asset, run `npm run test:package -- /path/to/asset.vsix`, and install it in VS Code. Publish **that same file** through the personal Marketplace publisher's direct upload flow below. Authenticated CLI publishing is an alternative, not a prerequisite.
 4. Verify Marketplace version, metadata, and installation by extension ID, then repeat the preview check.
 
 ## Authentication
@@ -13,10 +13,14 @@ Microsoft currently recommends Microsoft Entra ID with workload identity federat
 
 For an initial interactive release, Microsoft's documented PAT path remains available as of 2026-09-16: Azure DevOps → User settings → Personal access tokens → New Token → All accessible organizations → Marketplace: Manage. Use a short expiration and enter it only at `npx vsce login ReoX86`'s hidden local prompt. Never paste tokens into chat or commit them.
 
-**Azure DevOps global PATs retire December 1, 2026.** Migrate to an authorized Entra publishing identity before then. Add the identity to the Marketplace publisher with the Contributor role, then use `vsce publish --azure-credential`. No PAT-dependent automatic Marketplace workflow is configured here.
+**Azure DevOps global PATs retire December 1, 2026.** This project's direct upload flow does not depend on a PAT. If automated Marketplace publishing is added later, use an explicitly authorized personal Entra publishing identity; never use the university tenant. Add that identity to the Marketplace publisher with the Contributor role, then use `vsce publish --azure-credential`. No PAT-dependent automatic Marketplace workflow is configured here.
 
 References: [Microsoft publishing guide](https://code.visualstudio.com/api/working-with-extensions/publishing-extension), [publisher management](https://marketplace.visualstudio.com/manage/publishers/).
 
 ## Direct upload without an Azure DevOps PAT
 
 Microsoft also supports uploading the exact tested VSIX at the Marketplace publisher management page: select **ReoX86**, choose **New extension → Visual Studio Code**, select the release asset, and publish it. Sign-in can redirect through Microsoft's `app.vssps.visualstudio.com` identity service. This method does not require provisioning an Azure DevOps organization or changing an existing Azure directory. Use the Microsoft account authorized for this publisher.
+
+This project uses the personal Microsoft account publishing path. Before submitting v0.1.0, the Visual Studio profile showed **Authenticated in Tenant: Microsoft account**, and ReoX86 listed only the personal account as Owner. Do not use the university directory, its credentials, resources, or service connections for this project. A university membership elsewhere on the account does not authorize using that tenant for releases.
+
+The exact GitHub release asset was submitted through direct upload on 2026-09-17 (SHA-256 `6cb42df4acdfeeb1b2e812a75869da3fbbadf871d02ab5dacc98380de5ebc948`). Marketplace validation completed and installation by extension ID with signature verification succeeded on 2026-09-18. See [verification.md](verification.md) for the remaining visual check.
