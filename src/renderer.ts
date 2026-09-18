@@ -1,9 +1,10 @@
 import { Worker } from 'node:worker_threads';
 import { join } from 'node:path';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, createHash } from 'node:crypto';
 import { sanitizeSvg, namespaceSvg } from './sanitizer';
 const capacity = 4_000_000;
-export interface PlotRuntime { render(source: string): string; dispose(): void; }
+export interface RenderInput { source:string; files?:readonly {name:string;bytes:Uint8Array;displayName?:string}[]; identity?:string; }
+export interface PlotRuntime { render(source: string | RenderInput): string; dispose(): void; }
 export async function createRuntime(directory: string, timeout = 3000): Promise<PlotRuntime> {
   const buffer = new SharedArrayBuffer(capacity + 8);
   const state = new Int32Array(buffer, 0, 2);
@@ -35,19 +36,21 @@ export async function createRuntime(directory: string, timeout = 3000): Promise<
     dispose: stop,
   };
 }
-export function createRenderer(runtime: Pick<PlotRuntime, 'render'>, maxEntries = 96): (source: string) => string {
+export function createRenderer(runtime: Pick<PlotRuntime, 'render'>, maxEntries = 96): (source: string | RenderInput) => string {
   const cache = new Map<string, {svg?: string; error?: string}>();
   const session = randomBytes(6).toString('hex');
   let occurrence = 0;
   return (source) => {
-    if (source.length > 64_000) throw new Error('Gnuplot source exceeds the 64 KB limit.');
-    let result = cache.get(source);
-    if (result) cache.delete(source);
+    const input=typeof source==='string'?{source}:source;
+    if (input.source.length > 64_000) throw new Error('Gnuplot source exceeds the 64 KB limit.');
+    const key=createHash('sha256').update(JSON.stringify([input.source,input.identity??'',input.files?.map(f=>[f.name,f.displayName,createHash('sha256').update(f.bytes).digest('hex')])])).digest('hex');
+    let result = cache.get(key);
+    if (result) cache.delete(key);
     else {
-      try { result = {svg: sanitizeSvg(runtime.render(source))}; }
+      try { result = {svg: sanitizeSvg(runtime.render(source),new Map(input.files?.filter(f=>f.displayName!==undefined).map(f=>[f.name,f.displayName!]))) }; }
       catch (error) { result = {error: error instanceof Error ? error.message : 'Gnuplot rendering failed.'}; }
     }
-    cache.set(source, result);
+    cache.set(key, result);
     if (cache.size > maxEntries) cache.delete(cache.keys().next().value!);
     if (result.error !== undefined) throw new Error(result.error);
     return namespaceSvg(result.svg!, `gp-${session}-${++occurrence}-`);

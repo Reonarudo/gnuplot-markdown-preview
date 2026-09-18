@@ -2,7 +2,7 @@
   "name": "gnuplot-markdown-preview",
   "displayName": "Gnuplot Markdown Preview",
   "description": "Render gnuplot code fences directly in VS Code Markdown Preview using WebAssembly.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -39,14 +39,24 @@
   ],
   "capabilities": {
     "untrustedWorkspaces": {
-      "supported": true
+      "supported": "limited",
+      "description": "Functions and inline datasets work in Restricted Mode. External data files require a trusted local workspace."
     },
-    "virtualWorkspaces": true
+    "virtualWorkspaces": {
+      "supported": "limited",
+      "description": "Functions and inline datasets work; external data requires a local file workspace."
+    }
   },
   "contributes": {
     "markdown.markdownItPlugins": true,
     "markdown.previewStyles": [
       "media/preview.css"
+    ],
+    "commands": [
+      {
+        "command": "gnuplotMarkdownPreview.refreshData",
+        "title": "Gnuplot: Refresh Data"
+      }
     ]
   },
   "scripts": {
@@ -55,7 +65,8 @@
     "build": "node scripts/build.mjs",
     "vscode:prepublish": "npm run build",
     "package": "vsce package --no-dependencies",
-    "test:package": "node scripts/test-package.mjs"
+    "test:package": "node scripts/test-package.mjs",
+    "test:extension": "node scripts/test-extension.mjs"
   },
   "dependencies": {
     "@xmldom/xmldom": "0.9.12"
@@ -64,6 +75,7 @@
     "@types/markdown-it": "14.2.0",
     "@types/node": "22.20.3",
     "@types/vscode": "1.95.0",
+    "@vscode/test-electron": "3.1.0",
     "@vscode/vsce": "4.0.0",
     "esbuild": "0.28.2",
     "markdown-it": "15.0.2",

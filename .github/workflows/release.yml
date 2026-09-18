@@ -20,7 +20,7 @@ jobs:
       - run: npm run build
       - run: npm test
       - run: npm run package
-      - run: npm run test:package
+      - run: xvfb-run -a npm run test:package
       - run: sha256sum *.vsix > SHA256SUMS
       - name: Create GitHub Release
         env:

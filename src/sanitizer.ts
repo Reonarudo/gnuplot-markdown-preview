@@ -4,11 +4,12 @@ const elements = new Set('svg g defs path rect circle ellipse line polyline poly
 const attributes = new Set('id x y x1 y1 x2 y2 dx dy cx cy r rx ry width height viewBox preserveAspectRatio d points transform fill fill-opacity fill-rule stroke stroke-width stroke-opacity stroke-linecap stroke-linejoin stroke-dasharray stroke-dashoffset opacity font-family font-size font-weight font-style text-anchor dominant-baseline textLength lengthAdjust rotate clip-path clipPathUnits patternUnits patternTransform patternContentUnits gradientUnits gradientTransform offset stop-color stop-opacity filter filterUnits result in in2 operator mode flood-color flood-opacity color xmlns xmlns:xlink href xlink:href'.split(' '));
 const svgNamespace = 'http://www.w3.org/2000/svg';
 /** Parse as XML and allow only passive SVG geometry, text, and local references. */
-export function sanitizeSvg(source: string): string {
+export function sanitizeSvg(source: string, displayNames:ReadonlyMap<string,string>=new Map()): string {
   if (source.length > 4_000_000 || /<!DOCTYPE|<!ENTITY/i.test(source)) throw new Error('Unsafe or oversized SVG output.');
   const doc = new DOMParser({onError: () => { throw new Error('Invalid SVG output.'); }}).parseFromString(source, 'image/svg+xml');
   const root = doc.documentElement;
   if (!root || root.tagName !== 'svg' || root.namespaceURI !== svgNamespace) throw new Error('Gnuplot did not produce an SVG plot.');
+  let textBytes=0;
   function clean(el: Element): void {
     for (const attr of Array.from(el.attributes)) {
       const value = attr.value;
@@ -27,10 +28,22 @@ export function sanitizeSvg(source: string): string {
         if (element.namespaceURI !== svgNamespace || !elements.has(element.tagName)) el.removeChild(child);
         else clean(element);
       } else if (child.nodeType !== 3) el.removeChild(child);
+      else if(child.nodeValue){
+        // Change text nodes only; XML serialization escapes filenames safely.
+        textBytes+=child.nodeValue.length;
+        child.nodeValue=child.nodeValue.replace(/data-\d+\.dat/g,name=>{
+          const display=displayNames.get(name)??name;
+          textBytes+=display.length-name.length;
+          if(textBytes>4_000_000)throw new Error('Unsafe or oversized SVG output.');
+          return display;
+        });
+      }
     }
   }
   clean(root);
-  return new XMLSerializer().serializeToString(root);
+  const output=new XMLSerializer().serializeToString(root);
+  if(output.length>4_000_000)throw new Error('Unsafe or oversized SVG output.');
+  return output;
 }
 /** Every occurrence needs unique IDs, even when it uses a cached SVG. */
 export function namespaceSvg(svg: string, prefix: string): string {

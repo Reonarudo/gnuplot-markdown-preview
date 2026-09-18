@@ -1,10 +1,9 @@
-Initial release.
+# Gnuplot Markdown Preview v0.2.0
 
-- Render `gnuplot` fenced blocks in VS Code Markdown Preview.
-- Bundled WebAssembly gnuplot 6.0.2 runtime.
-- SVG rendering, inline datasets, and 3D plots.
-- No system gnuplot installation required.
-- Preserve other code fences, cache repeated plots, and show localized errors.
-- Disable host shell/filesystem access and sanitize generated SVG.
+- Plot relative CSV, DAT, and TXT files in trusted local workspaces.
+- Refresh file-backed plots when saved data changes, with missing-file recovery.
+- Keep each document and render isolated using read-only WASM data snapshots.
+- Enforce workspace boundaries, input limits, and Restricted Mode behavior.
+- Add **Gnuplot: Refresh Data** and real VS Code integration coverage.
 
-Install the attached VSIX with **Extensions: Install from VSIX**.
+External data currently requires a saved Markdown document inside a local workspace. Remote data providers, computed filenames, binary data, and external scripts are not supported. Function and inline-data plotting remain available without external file access.

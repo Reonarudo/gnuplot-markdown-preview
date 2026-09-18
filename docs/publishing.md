@@ -3,7 +3,7 @@
 Release identity: `ReoX86.gnuplot-markdown-preview`. Repository owner: `Reonarudo`.
 
 1. Run CI checks, package, and `npm run test:package`. Install the VSIX in VS Code and inspect the built-in Markdown Preview.
-2. Push the matching `v0.1.0` tag. The release workflow repeats checks, tests the packaged extension, and attaches its VSIX and SHA-256 digest to the GitHub Release.
+2. Push the matching version tag (currently `v0.2.0`). The release workflow repeats checks, tests the packaged extension, and attaches its VSIX and SHA-256 digest to the GitHub Release.
 3. Download that release asset, run `npm run test:package -- /path/to/asset.vsix`, and install it in VS Code. Publish **that same file** through the personal Marketplace publisher's direct upload flow below. Authenticated CLI publishing is an alternative, not a prerequisite.
 4. Verify Marketplace version, metadata, and installation by extension ID, then repeat the preview check.
 
@@ -19,7 +19,7 @@ References: [Microsoft publishing guide](https://code.visualstudio.com/api/worki
 
 ## Direct upload without an Azure DevOps PAT
 
-Microsoft also supports uploading the exact tested VSIX at the Marketplace publisher management page: select **ReoX86**, choose **New extension → Visual Studio Code**, select the release asset, and publish it. Sign-in can redirect through Microsoft's `app.vssps.visualstudio.com` identity service. This method does not require provisioning an Azure DevOps organization or changing an existing Azure directory. Use the Microsoft account authorized for this publisher.
+Microsoft also supports uploading the exact tested VSIX at the Marketplace publisher management page: select **ReoX86**, choose the existing extension’s **More Actions → Update**, select the release asset, and upload it. For a first release only, use **New extension → Visual Studio Code**. Sign-in can redirect through Microsoft's `app.vssps.visualstudio.com` identity service. This method does not require provisioning an Azure DevOps organization or changing an existing Azure directory. Use the Microsoft account authorized for this publisher.
 
 This project uses the personal Microsoft account publishing path. Before submitting v0.1.0, the Visual Studio profile showed **Authenticated in Tenant: Microsoft account**, and ReoX86 listed only the personal account as Owner. Do not use the university directory, its credentials, resources, or service connections for this project. A university membership elsewhere on the account does not authorize using that tenant for releases.
 

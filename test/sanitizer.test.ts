@@ -15,3 +15,14 @@ test('preserves geometry, enhanced text, local use references and filters', () =
 test('rejects malformed, entity-bearing and non-SVG documents', () => {
   for (const source of ['<html/>','<!DOCTYPE svg [<!ENTITY a "bad">]>'+wrap(''),wrap('<path>')]) assert.throws(() => sanitizeSvg(source));
 });
+
+test('virtual data names are restored only as escaped SVG text',()=>{
+ const result=sanitizeSvg('<svg xmlns="http://www.w3.org/2000/svg"><text>data-0.dat</text></svg>',new Map([['data-0.dat','data/a & <b>.csv']]));
+ assert.match(result,/data\/a &amp; &lt;b&gt;.csv/);
+ assert.doesNotMatch(result,/<b>/);
+});
+
+test('restored filenames are not recursively substituted and remain size bounded',()=>{
+ assert.match(sanitizeSvg(wrap('<text>data-0.dat data-1.dat</text>'),new Map([['data-0.dat','data-1.dat'],['data-1.dat','original.csv']])),/>data-1.dat original.csv</);
+ assert.throws(()=>sanitizeSvg(wrap('<text>'+ 'data-0.dat '.repeat(1000)+'</text>'),new Map([['data-0.dat','x'.repeat(5000)]])),/oversized/);
+});
