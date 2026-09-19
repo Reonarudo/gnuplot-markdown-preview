@@ -24,3 +24,5 @@ Microsoft also supports uploading the exact tested VSIX at the Marketplace publi
 This project uses the personal Microsoft account publishing path. Before submitting v0.1.0, the Visual Studio profile showed **Authenticated in Tenant: Microsoft account**, and ReoX86 listed only the personal account as Owner. Do not use the university directory, its credentials, resources, or service connections for this project. A university membership elsewhere on the account does not authorize using that tenant for releases.
 
 The exact GitHub release asset was submitted through direct upload on 2026-09-17 (SHA-256 `6cb42df4acdfeeb1b2e812a75869da3fbbadf871d02ab5dacc98380de5ebc948`). Marketplace validation completed, installation by extension ID with signature verification succeeded, and the Marketplace-installed visual check passed on 2026-09-18. See [verification.md](verification.md) for the completed release checks.
+
+Version 0.2.0 was released through the same personal direct-upload path and verified on 2026-09-19. See [verification-0.2.0.md](verification-0.2.0.md) for CI, artifact checksum, Marketplace signature checks, and rendering evidence.

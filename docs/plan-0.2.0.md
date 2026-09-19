@@ -1,6 +1,6 @@
 # Version 0.2.0 plan: relative data files
 
-Status: implementation in release verification, 2026-09-19. The user selected relative CSV/data files as the release priority and authorized implementation. The context/refresh integration passed on VS Code 1.95.0 and 1.137.0; external data remains limited to local file workspaces. See verification-0.2.0.md for release evidence.
+Status: released and verified, 2026-09-19. The user selected relative CSV/data files as the release priority and authorized implementation. The context/refresh integration passed on VS Code 1.95.0 and 1.137.0; external data remains limited to local file workspaces. See verification-0.2.0.md for release evidence.
 
 ## User outcome
 
