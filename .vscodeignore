@@ -2,6 +2,7 @@
 !dist/**
 !media/icon.png
 !media/preview.css
+!media/screenshots/*.jpg
 !package.json
 !README.md
 !CHANGELOG.md

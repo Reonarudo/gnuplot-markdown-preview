@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+
+- Add real VS Code demo screenshots to the README and packaged Marketplace assets.
+- Documentation-only update; rendering behavior is unchanged.
+
 ## 0.2.0
 
 - Render literal relative CSV, DAT, and TXT data files inside trusted local workspaces.

@@ -16,6 +16,8 @@ plot sin(x) title "sin(x)", \
 
 Open the normal Markdown Preview to see an inline SVG plot in place of the fence.
 
+![Sine and cosine gnuplot fences rendered in VS Code’s built-in Markdown Preview](media/screenshots/functions.jpg)
+
 ## Features
 
 - Real gnuplot syntax, using gnuplot 6.0.2 compiled to WebAssembly.
@@ -56,12 +58,16 @@ EOD
 plot $data using 1:2 with linespoints title "Squares"
 ```
 
+![Inline data rendered as a squares plot in VS Code Markdown Preview](media/screenshots/inline-data.jpg)
+
 ### 3D surface
 
 ```gnuplot
 set hidden3d
 splot sin(sqrt(x*x+y*y))
 ```
+
+![A gnuplot 3D surface rendered in VS Code Markdown Preview](media/screenshots/3d-surface.jpg)
 
 See [examples/demo.md](https://github.com/Reonarudo/gnuplot-markdown-preview/blob/main/examples/demo.md) for a complete preview fixture.
 
