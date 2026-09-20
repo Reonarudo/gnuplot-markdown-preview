@@ -22,8 +22,8 @@ interface Module {
 }
 interface Factory { default(options: Record<string, unknown>): Promise<Module>; }
 const {buffer, directory} = workerData as {buffer: SharedArrayBuffer; directory: string};
-const state = new Int32Array(buffer, 0, 2);
-const bytes = new Uint8Array(buffer, 8);
+const state = new Int32Array(buffer, 0, 3);
+const bytes = new Uint8Array(buffer, 12);
 async function main(): Promise<void> {
   const factory = await import(pathToFileURL(join(directory, 'gnuplot.mjs')).href) as Factory;
   let diagnostics = '';
@@ -86,6 +86,7 @@ async function main(): Promise<void> {
     Atomics.store(state, 0, success ? 1 : 2);
     Atomics.notify(state, 0);
   });
+  Atomics.store(state, 2, 1);
   parentPort!.postMessage({ready: true});
 }
 void main().catch((error: unknown) => parentPort!.postMessage({error: error instanceof Error ? error.message : 'WASM initialization failed.'}));

@@ -2,6 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { resolve } from 'node:path';
 import { existsSync, readFileSync } from 'node:fs';
+import { mkdtemp, writeFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { createRuntime, createRenderer } from '../src/renderer';
 const svg = '<svg xmlns="http://www.w3.org/2000/svg"><path id="p"/><use href="#p"/></svg>';
 test('bounded LRU cache avoids repeated execution and isolates IDs', () => {
@@ -47,3 +50,25 @@ test('quoted output-command text is a legitimate label', async () => {
   try {assert.match(runtime.render('set title "set terminal is unnecessary"\nplot x'),/<svg/);}
   finally {runtime.dispose();}
 });
+
+test('ready worker survives extension-host event-loop starvation during initialization', async () => {
+  const pending = createRuntime(resolve('dist'));
+  // Other extensions can block the host while this worker initializes independently.
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 10_500);
+  const runtime = await pending;
+  try { assert.match(runtime.render('plot sin(x)'), /<svg/); }
+  finally { runtime.dispose(); }
+});
+
+for (const [name, worker, message] of [
+  ['early worker exit', 'process.exit(7)', /worker exited during initialization \(code 7\)/],
+  ['unresponsive worker', 'setInterval(() => {}, 1000)', /initialization timed out/],
+] as const) {
+  test(`startup reports ${name} and cleans up`, async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'gnuplot-startup-'));
+    try {
+      await writeFile(join(directory, 'worker.js'), worker);
+      await assert.rejects(createRuntime(directory), message);
+    } finally { await rm(directory, {recursive: true, force: true}); }
+  });
+}

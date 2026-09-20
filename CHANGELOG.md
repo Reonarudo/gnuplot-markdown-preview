@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.2
+
+- Avoid false initialization timeouts when a busy extension host delays delivery of the worker's ready message.
+- Report workers that exit during startup directly, and explain how to retry a genuine startup timeout.
+- Add regression coverage for delayed message delivery, early exit, and unresponsive startup.
+
 ## 0.2.1
 
 - Add real VS Code demo screenshots to the README and packaged Marketplace assets.

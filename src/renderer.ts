@@ -6,21 +6,30 @@ const capacity = 4_000_000;
 export interface RenderInput { source:string; files?:readonly {name:string;bytes:Uint8Array;displayName?:string}[]; identity?:string; }
 export interface PlotRuntime { render(source: string | RenderInput): string; dispose(): void; }
 export async function createRuntime(directory: string, timeout = 3000): Promise<PlotRuntime> {
-  const buffer = new SharedArrayBuffer(capacity + 8);
-  const state = new Int32Array(buffer, 0, 2);
-  const bytes = new Uint8Array(buffer, 8);
+  const buffer = new SharedArrayBuffer(capacity + 12);
+  const state = new Int32Array(buffer, 0, 3);
+  const bytes = new Uint8Array(buffer, 12);
   const worker = new Worker(join(directory, 'worker.js'), {workerData: {buffer, directory}, env: {}, resourceLimits: {maxOldGenerationSizeMb: 128}});
   let stopped = false;
   const stop = (): void => { stopped = true; void worker.terminate(); };
   await new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(() => { stop(); reject(new Error('Gnuplot initialization timed out.')); }, 10000);
+    const timer = setTimeout(() => {
+      // The host may be busy with another extension: a ready message can be
+      // queued behind this timer even though the worker finished long ago.
+      if (!stopped && Atomics.load(state, 2) === 1) { resolve(); return; }
+      stop(); reject(new Error('Gnuplot initialization timed out. Reload the VS Code window to retry.'));
+    }, 10000);
     worker.once('message', (message: {ready?: boolean; error?: string}) => {
       clearTimeout(timer);
       if (message.ready) resolve();
       else { stop(); reject(new Error(message.error ?? 'Gnuplot initialization failed.')); }
     });
     worker.once('error', (error) => { clearTimeout(timer); stopped = true; reject(error); });
-    worker.once('exit', () => { stopped = true; });
+    worker.once('exit', (code) => {
+      stopped = true;
+      clearTimeout(timer);
+      reject(new Error(`Gnuplot worker exited during initialization (code ${code}).`));
+    });
   });
   return {
     render(source) {

@@ -1,3 +1,5 @@
-# Gnuplot Markdown Preview v0.2.1
+# Gnuplot Markdown Preview v0.2.2
 
-Documentation-only update: the README now includes real VS Code screenshots of function plots, inline datasets, and a 3D surface. Screenshot assets are bundled in the extension package. Rendering behavior is unchanged from 0.2.0.
+Fix a false startup timeout when another extension keeps the VS Code extension host busy. The renderer now checks a shared worker readiness flag before declaring initialization timed out, so a delayed ready message does not discard an initialized renderer. Workers that exit during startup report their exit immediately. Genuine startup and render time limits remain enforced.
+
+After updating, run **Developer: Reload Window** to clear an initialization failure retained by the previous version.
