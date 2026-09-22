@@ -28,6 +28,9 @@ exports.run=async()=>{
  assert.match(attributed, /role="img" aria-label="Sine curve"/);
  assert.match(attributed, /<svg/);
  assert.match(attributed, /<figcaption>Figure 1: &lt;sine&gt;<\/figcaption>/);
+ const tolerant=await render('```gnuplot {unknown="ignored" alt=bad caption="Still renders"}\nplot sin(x)\n```');
+ assert.match(tolerant, /<svg/); assert.match(tolerant, /<figcaption>Still renders<\/figcaption>/);
+ assert.doesNotMatch(tolerant, /gnuplot-error/);
  const repeated=await render('```gnuplot\nplot sin(x)\n```\n```gnuplot\nplot sin(x)\n```');
  const ids=[...repeated.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);assert.equal(new Set(ids).size,ids.length);
 

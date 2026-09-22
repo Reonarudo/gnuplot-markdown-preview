@@ -1,11 +1,5 @@
-# Gnuplot Markdown Preview v0.2.3
+# Gnuplot Markdown Preview v0.2.5
 
-Gnuplot fences now accept optional `alt` and `caption` attributes:
+Malformed and unknown fence attributes are now silently ignored, so plots continue to render. Valid alt text and captions are retained where parsing is unambiguous; the first valid value wins for duplicate keys. Incomplete outer attribute blocks are ignored entirely.
 
-````markdown
-```gnuplot {alt="Sine curve" caption="Figure 1: Sine wave"}
-plot sin(x)
-```
-````
-
-Alt text provides an accessible plot description. Captions appear beneath the plot. Both values are plain text and support single or double quotes. Invalid or unsupported attributes produce a local fence error. Existing bare gnuplot fences work unchanged.
+Actual Gnuplot rendering errors remain visible. Existing attribute text escaping and plain fences are unchanged.

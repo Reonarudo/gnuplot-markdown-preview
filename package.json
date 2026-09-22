@@ -2,7 +2,7 @@
   "name": "gnuplot-markdown-preview",
   "displayName": "Gnuplot Markdown Preview",
   "description": "Render gnuplot code fences directly in VS Code Markdown Preview using WebAssembly.",
-  "version": "0.2.3",
+  "version": "0.2.5",
   "license": "MIT",
   "repository": {
     "type": "git",

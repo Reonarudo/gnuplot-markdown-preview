@@ -48,13 +48,25 @@ test('attribute text is escaped, including quotes, markup and Markdown', () => {
   assert.match(md.render('```gnuplot {caption="A \\"quote\\" and \\\\ path"}\nplot x\n```'), /A &quot;quote&quot; and \\ path/);
 });
 
-test('malformed and unsupported attributes fail locally without executing a plot', () => {
-  const md = markdownPlugin(new MarkdownIt(), () => { throw Error('renderer called'); });
+test('malformed and unsupported attributes never prevent plotting', () => {
+  let calls = 0;
+  const md = markdownPlugin(new MarkdownIt(), () => { calls++; return '<svg></svg>'; });
   for (const attributes of ['{alt=unquoted}', '{alt="a" alt="b"}', '{width="400"}', '{caption="x"} junk', '{alt="x"', '{alt="x"caption="y"}']) {
     const html = md.render('Before\n\n```gnuplot '+attributes+'\nplot x\n```\n\nAfter');
-    assert.match(html, /gnuplot-error/); assert.doesNotMatch(html, /renderer called/);
+    assert.doesNotMatch(html, /gnuplot-error/); assert.match(html, /<svg>/);
     assert.match(html, /<p>After<\/p>/);
   }
+  assert.equal(calls, 6);
+});
+
+test('valid attributes survive unknown, malformed and duplicate fields', () => {
+  const md = markdownPlugin(new MarkdownIt(), () => '<svg></svg>');
+  const html = md.render('```gnuplot {width="400" alt=bad caption="Good" alt="First" alt="Second" onclick="evil"}\nplot x\n```');
+  assert.match(html, /<figcaption>Good<\/figcaption>/);
+  assert.match(html, /aria-label="First"/);
+  assert.doesNotMatch(html, /Second|onclick|evil|gnuplot-error/);
+  const broken = md.render('```gnuplot {unknown="unterminated caption=\'hidden\'}\nplot x\n```');
+  assert.match(broken, /<svg>/); assert.doesNotMatch(broken, /figcaption|hidden|gnuplot-error/);
 });
 
 test('loading status remains accessible and empty attributes are accepted', () => {

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.5
+
+- Gracefully ignore malformed and unknown fence attributes while continuing to render plots.
+- Preserve safely parsed alt text and captions; use the first valid value for duplicate attributes.
+
 ## 0.2.3
 
 - Support optional quoted `alt` and `caption` attributes on gnuplot fences.

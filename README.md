@@ -46,7 +46,7 @@ plot sin(x), cos(x)
 ```
 ````
 
-Both attributes are optional and may appear in either order. Use single or double quotes; escape a matching quote or a backslash with a backslash. Values are plain text, not Markdown or HTML. `alt` labels the plot for assistive technology; `caption` appears beneath it. Unknown attributes, duplicate keys, and malformed syntax show a local fence error. Bare `gnuplot` fences continue to work unchanged.
+Both attributes are optional and may appear in either order. Use single or double quotes; escape a matching quote or a backslash with a backslash. Values are plain text, not Markdown or HTML. `alt` labels the plot for assistive technology; `caption` appears beneath it. Unknown or malformed attributes are silently ignored so the plot still renders. Valid attributes are retained where parsing is unambiguous; the first valid value wins for duplicate keys. An incomplete or malformed outer brace block is ignored entirely. Bare `gnuplot` fences continue to work unchanged.
 
 ## Examples
 
