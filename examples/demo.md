@@ -53,3 +53,10 @@ The preview continues after the error.
 set hidden3d
 splot sin(sqrt(x*x+y*y))
 ```
+
+## Accessible plot with caption
+
+```gnuplot {alt="A sine wave oscillating between minus one and one" caption="Figure 1: Sine wave"}
+set grid
+plot sin(x) title "sin(x)"
+```

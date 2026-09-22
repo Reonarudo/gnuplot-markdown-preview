@@ -32,8 +32,21 @@ Open the normal Markdown Preview to see an inline SVG plot in place of the fence
 
 1. Install **Gnuplot Markdown Preview** (`ReoX86.gnuplot-markdown-preview`).
 2. Open a Markdown file.
-3. Add a fenced block with the language exactly `gnuplot`.
+3. Add a fenced block with the language `gnuplot` (optionally followed by the attributes below).
 4. Run **Markdown: Open Preview** from the Command Palette, or press **Ctrl+Shift+V** on Windows/Linux and **Cmd+Shift+V** on macOS. Use **Markdown: Open Preview to the Side** for an editor-and-preview layout.
+
+## Alt text and captions (0.2.3)
+
+Add an accessible description and a visible caption after the language name:
+
+````markdown
+```gnuplot {alt="Sine and cosine curves" caption="Figure 1: Trigonometric functions"}
+set grid
+plot sin(x), cos(x)
+```
+````
+
+Both attributes are optional and may appear in either order. Use single or double quotes; escape a matching quote or a backslash with a backslash. Values are plain text, not Markdown or HTML. `alt` labels the plot for assistive technology; `caption` appears beneath it. Unknown attributes, duplicate keys, and malformed syntax show a local fence error. Bare `gnuplot` fences continue to work unchanged.
 
 ## Examples
 

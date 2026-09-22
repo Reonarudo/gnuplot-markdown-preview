@@ -7,7 +7,7 @@ exports.run=async()=>{
  const root=process.env.GNUPLOT_TEST_WORKSPACE;
  assert(vscode.workspace.isTrusted,'integration fixture must be trusted');
  for(const folder of ['a','b'])await fs.mkdir(path.join(root,folder),{recursive:true});
- const source='```gnuplot\nset datafile separator comma\nplot "data.csv" using 1:2 with lines title "external"\n```';
+ const source='```gnuplot {alt="External data" caption="File-backed plot"}\nset datafile separator comma\nplot "data.csv" using 1:2 with lines title "external"\n```';
  for(const folder of ['a','b'])await fs.writeFile(path.join(root,folder,'demo.md'),source);
  await fs.writeFile(path.join(root,'a/data.csv'),'0,0\n1,1\n2,2\n');
  await fs.writeFile(path.join(root,'b/data.csv'),'0,0\n1,2\n2,4\n');
@@ -23,6 +23,11 @@ exports.run=async()=>{
  const normalized=html=>html.replace(/gp-[a-z0-9-]+/g,'');
  const basic=await render('```gnuplot\nplot sin(x)\n```\n```swift\nlet x = 42\n```\n```javascript\nconst x = 1;\n```\n```gnuplot\nthis is invalid gnuplot\n```');
  assert.match(basic,/<svg/);assert.match(basic,/gnuplot-error/);assert.match(basic,/language-swift/);assert.match(basic,/language-javascript/);
+ const attributed=await render('```gnuplot {alt="Sine curve" caption="Figure 1: <sine>"}\nplot sin(x)\n```');
+ assert.match(attributed, /<figure class="gnuplot-markdown-preview">/);
+ assert.match(attributed, /role="img" aria-label="Sine curve"/);
+ assert.match(attributed, /<svg/);
+ assert.match(attributed, /<figcaption>Figure 1: &lt;sine&gt;<\/figcaption>/);
  const repeated=await render('```gnuplot\nplot sin(x)\n```\n```gnuplot\nplot sin(x)\n```');
  const ids=[...repeated.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);assert.equal(new Set(ids).size,ids.length);
 

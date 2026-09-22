@@ -1,5 +1,11 @@
-# Gnuplot Markdown Preview v0.2.2
+# Gnuplot Markdown Preview v0.2.3
 
-Fix a false startup timeout when another extension keeps the VS Code extension host busy. The renderer now checks a shared worker readiness flag before declaring initialization timed out, so a delayed ready message does not discard an initialized renderer. Workers that exit during startup report their exit immediately. Genuine startup and render time limits remain enforced.
+Gnuplot fences now accept optional `alt` and `caption` attributes:
 
-After updating, run **Developer: Reload Window** to clear an initialization failure retained by the previous version.
+````markdown
+```gnuplot {alt="Sine curve" caption="Figure 1: Sine wave"}
+plot sin(x)
+```
+````
+
+Alt text provides an accessible plot description. Captions appear beneath the plot. Both values are plain text and support single or double quotes. Invalid or unsupported attributes produce a local fence error. Existing bare gnuplot fences work unchanged.

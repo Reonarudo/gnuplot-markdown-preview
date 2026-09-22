@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.3
+
+- Support optional quoted `alt` and `caption` attributes on gnuplot fences.
+- Expose alt text as the plot’s accessible name and render captions beneath plots.
+- Escape attribute text and report malformed, duplicate, or unsupported attributes locally.
+
 ## 0.2.2
 
 - Avoid false initialization timeouts when a busy extension host delays delivery of the worker's ready message.
