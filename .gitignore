@@ -5,3 +5,7 @@ dist/
 .vscode-test/
 artifacts/
 .DS_Store
+
+# Internal design docs (glossary, ADRs) stay off GitHub
+/CONTEXT.md
+/docs/adr/
