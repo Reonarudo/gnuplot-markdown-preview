@@ -20,13 +20,14 @@ Open the normal Markdown Preview to see an inline SVG plot in place of the fence
 
 ## Features
 
-- Real gnuplot syntax, using gnuplot 6.0.2 compiled to WebAssembly.
+- Real gnuplot syntax, using gnuplot 6.0.2 compiled to WebAssembly, through [gnuplot-renderer](https://github.com/Reonarudo/gnuplot-renderer).
+- Requires VS Code 1.101 or later (0.2.5 remains available for older versions).
 - Local rendering with no network service or native gnuplot process.
 - Crisp SVG output and responsive plot sizing.
 - Inline datasets, relative CSV/data files, multiple functions, and 3D plots.
 - File-backed plots refresh when their saved data changes.
 - Normal Markdown and other fenced languages remain unchanged.
-- Localized errors and an in-memory plot cache.
+- Localized errors with line and column, `print` output shown above the plot, and an in-memory plot cache.
 
 ## Usage
 
@@ -97,7 +98,7 @@ Gnuplot reads the original data bytes: use its normal separator, header, and `us
 
 Files must stay inside the Markdown document's own workspace folder. Parent-relative paths such as `../data/results.csv` work within that boundary. Absolute paths, symlink components, URLs, computed filenames, and script loading are unsupported. Unsaved documents, documents outside a workspace, remote URI providers, and Restricted Mode support self-contained plots only.
 
-Limits: 1 MiB per file, 4 MiB and 16 files per plot, 32 MiB of cached file snapshots, 128 file-backed plots, and eight concurrent loading requests. Close unused Markdown documents and run **Gnuplot: Refresh Data** if the cache budget is reached. A loading message appears until files are ready; read errors stay local to their plot. See [examples/files.md](https://github.com/Reonarudo/gnuplot-markdown-preview/blob/main/examples/files.md).
+Limits: 1 MiB per file, 4 MiB and 16 files per plot, 32 MiB of cached file snapshots, and eight concurrent loading requests. Close unused Markdown documents and run **Gnuplot: Refresh Data** if the cache budget is reached. A loading message appears the first time a plot is shown, until it is ready; while you edit a fence, its previous plot stays in view. Read errors stay local to their plot. See [examples/files.md](https://github.com/Reonarudo/gnuplot-markdown-preview/blob/main/examples/files.md).
 
 ## Output and errors
 
@@ -105,21 +106,21 @@ The preview selects the SVG terminal and output file for you. Omit `set terminal
 
 Every program starts with clean gnuplot memory. Variables and datablocks do not carry between fences. Plots use a white background in both light and dark editor themes.
 
-## Limitations in 0.2.0
+## Limitations
 
 - External data supports literal filenames in `plot`/`splot`; computed filenames, iteration-generated filenames, binary data, `load`/`call` scripts, and shell pipelines are unsupported.
 - SVG is the only supported output. Other terminal types and interactive terminal features are unavailable.
 - The bundled build excludes native GUI, bitmap, Lua, plugin, and optional external-library features.
 - Maximum source: 64,000 characters; maximum SVG: 4 MB; WASM memory: 64 MiB; render time: three seconds.
-- After a render timeout the worker stops. Run **Developer: Reload Window** to resume plotting.
+- A plot that times out shows an error and is not retried until you run **Gnuplot: Refresh Data**; other plots keep rendering.
 - Desktop VS Code and remote extension hosts are supported; browser-only VS Code is not.
 - A document with many distinct expensive plots can take time to render. The 96-entry cache avoids repeating identical work.
 
 ## Security
 
-Gnuplot executes inside the bundled WebAssembly environment, never by invoking a system gnuplot process. The runtime is built without Node shell/filesystem bridges and only sees restricted in-memory files. Gnuplot cannot read the host filesystem or invoke its shell. In a trusted local workspace, the extension reads validated data files and supplies read-only in-memory snapshots. Restricted Mode does not read external data. Paths are checked before and after loading, but this is not an OS sandbox against another process concurrently replacing workspace directories; only trust workspaces you control. SVG is sanitized before inclusion: scripts, event handlers, executable HTML, and external resources are excluded. No telemetry is collected.
+Gnuplot executes inside gnuplot-renderer's WebAssembly environment, never by invoking a system gnuplot process. The runtime is built without Node shell/filesystem bridges and only sees restricted in-memory files. Gnuplot cannot read the host filesystem or invoke its shell. In a trusted local workspace, the extension reads validated data files and supplies read-only in-memory snapshots. Restricted Mode does not read external data. Paths are checked before and after loading, but this is not an OS sandbox against another process concurrently replacing workspace directories; only trust workspaces you control. SVG is sanitized by the library before inclusion: scripts, event handlers, executable HTML, and external resources are excluded. Error messages, notes, alt text and captions are escaped. No telemetry is collected.
 
-See [the audit](https://github.com/Reonarudo/gnuplot-markdown-preview/blob/main/docs/licensing-audit.md) for the build provenance and security boundaries.
+See [gnuplot-renderer's README](https://github.com/Reonarudo/gnuplot-renderer#how-the-safety-guarantees-are-met) for how its safety guarantees are met, and its notices for the engine's build provenance.
 
 ## Development
 
@@ -135,9 +136,9 @@ npm run package
 npm run test:package
 ```
 
-Extension-host and package tests download official VS Code and require a desktop display (use `xvfb-run -a` on Linux). Set `VSCODE_VERSION=1.95.0` to test the minimum version, or `VSCODE_EXECUTABLE` to use an existing application executable.
+Extension-host and package tests download official VS Code and require a desktop display (use `xvfb-run -a` on Linux). Set `VSCODE_VERSION=1.101.0` to test the minimum version, or `VSCODE_EXECUTABLE` to use an existing application executable.
 
-Press F5 to launch the Extension Development Host and open `examples/demo.md`. The normal build copies audited WASM assets from `vendor/gnuplot`. Rebuilding WASM itself requires Emscripten 6.0.9 and `bash scripts/build-wasm.sh`; compiler prerequisites are unnecessary for normal extension development.
+Press F5 to launch the Extension Development Host and open `examples/demo.md`. The renderer is a dependency pinned to its [release tarball](https://github.com/Reonarudo/gnuplot-renderer/releases) (`.npmrc` sets `allow-remote=root` for npm 12); it is not bundled but shipped under the VSIX's `node_modules`. The gnuplot engine and its WebAssembly build pipeline live in gnuplot-renderer.
 
 GitHub Actions checks the build and packaged rendering path. Tags create a GitHub Release containing the tested VSIX. Marketplace publishing is an explicit authenticated step; see [publishing.md](https://github.com/Reonarudo/gnuplot-markdown-preview/blob/main/docs/publishing.md).
 
@@ -149,4 +150,4 @@ GitHub Actions checks the build and packaged rendering path. Tags create a GitHu
 
 ## License
 
-The extension's original code and artwork are [MIT licensed](https://github.com/Reonarudo/gnuplot-markdown-preview/blob/main/LICENSE). Bundled gnuplot uses its own license. Compiler runtime and XML parser notices are retained in [THIRD_PARTY_NOTICES.md](https://github.com/Reonarudo/gnuplot-markdown-preview/blob/main/THIRD_PARTY_NOTICES.md) and the accompanying notice files.
+The extension's original code and artwork are [MIT licensed](https://github.com/Reonarudo/gnuplot-markdown-preview/blob/main/LICENSE). Gnuplot, shipped inside gnuplot-renderer, uses its own license. Its notices, and those of the compiler runtime and XML parser, are retained in [THIRD_PARTY_NOTICES.md](https://github.com/Reonarudo/gnuplot-markdown-preview/blob/main/THIRD_PARTY_NOTICES.md) and the accompanying notice files.

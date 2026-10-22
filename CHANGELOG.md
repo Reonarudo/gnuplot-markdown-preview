@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.0
+
+- Render through [gnuplot-renderer](https://github.com/Reonarudo/gnuplot-renderer) 1.0.0, shipped in the extension, instead of a vendored copy of gnuplot. The engine is the same gnuplot 6.0.2 WebAssembly build.
+- **Requires VS Code 1.101 or later.** Older versions keep 0.2.5.
+- A render that runs past three seconds no longer stops plotting until the window is reloaded: that plot shows a timeout and the next one renders. **Gnuplot: Refresh Data** retries it.
+- Errors give their line and column in the fence, and data-file errors point at the operand.
+- `print` output and gnuplot's warnings are shown above the plot.
+- Editing a fence keeps its previous plot in view until the new one is ready, instead of flashing a loading message. A fence seen for the first time, including one without data files, briefly shows the loading message.
+- Plot element ids are derived from the plot's content, not random per render.
+- If the renderer cannot load, plots say so and the cause is logged to the **Gnuplot Markdown Preview** output channel.
+
 ## 0.2.5
 
 - Gracefully ignore malformed and unknown fence attributes while continuing to render plots.

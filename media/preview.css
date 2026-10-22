@@ -1,5 +1,7 @@
 .gnuplot-markdown-preview { overflow-x: auto; margin: 1em 0; }
-.gnuplot-markdown-preview svg { display: block; max-width: 100%; height: auto; background: white; color-scheme: light; }
+/* The library's SVG has a viewBox and no size; 1000px is the terminal's canvas, as before. */
+.gnuplot-markdown-preview svg { display: block; width: 1000px; max-width: 100%; height: auto; background: white; color-scheme: light; }
 .gnuplot-markdown-preview figcaption { margin-top: .5em; text-align: center; }
+.gnuplot-notes { font-family: var(--vscode-editor-font-family, monospace); white-space: pre-wrap; margin: 1em 0 .25em; opacity: .8; }
 .gnuplot-error { border-left: 3px solid var(--vscode-editorWarning-foreground, #b58900); padding: .5em 1em; margin: 1em 0; }
 .gnuplot-error pre { white-space: pre-wrap; margin: 0; }

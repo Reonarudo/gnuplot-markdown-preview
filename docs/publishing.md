@@ -3,7 +3,7 @@
 Release identity: `ReoX86.gnuplot-markdown-preview`. Repository owner: `Reonarudo`.
 
 1. Run CI checks, package, and `npm run test:package`. Install the VSIX in VS Code and inspect the built-in Markdown Preview.
-2. Push the matching version tag (currently `v0.2.0`). The release workflow repeats checks, tests the packaged extension, and attaches its VSIX and SHA-256 digest to the GitHub Release.
+2. Push the matching version tag (currently `v0.3.0`). The release workflow repeats checks, tests the packaged extension, and attaches its VSIX and SHA-256 digest to the GitHub Release.
 3. Download that release asset, run `npm run test:package -- /path/to/asset.vsix`, and install it in VS Code. Publish **that same file** through the personal Marketplace publisher's direct upload flow below. Authenticated CLI publishing is an alternative, not a prerequisite.
 4. Verify Marketplace version, metadata, and installation by extension ID, then repeat the preview check.
 

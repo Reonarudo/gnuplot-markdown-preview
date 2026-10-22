@@ -12,6 +12,7 @@ exports.run=async()=>{
  await fs.writeFile(path.join(root,'a/data.csv'),'0,0\n1,1\n2,2\n');
  await fs.writeFile(path.join(root,'b/data.csv'),'0,0\n1,2\n2,4\n');
  const extension=vscode.extensions.getExtension('ReoX86.gnuplot-markdown-preview');assert(extension);
+ assert.equal(path.resolve(extension.extensionPath),path.resolve(process.env.GNUPLOT_EXTENSION_PATH),'the extension under test is the one loaded');
  const api=await extension.activate();
  const observed=[];const original=api.extendMarkdownIt;
  api.extendMarkdownIt=md=>{const result=original(md);const fence=result.renderer.rules.fence;result.renderer.rules.fence=(...args)=>{const html=fence(...args);observed.push({uri:args[3].currentDocument?.toString(),html});return html;};return result;};
@@ -19,20 +20,30 @@ exports.run=async()=>{
  const a=await vscode.workspace.openTextDocument(path.join(root,'a/demo.md'));
  const b=await vscode.workspace.openTextDocument(path.join(root,'b/demo.md'));
  const render=doc=>vscode.commands.executeCommand('markdown.api.render',doc);
- const ready=async(doc,pattern=/<svg\b/)=>{for(let i=0;i<100;i++){const html=await render(doc);if(pattern.test(html))return html;await delay(100);}throw Error('Timed out: '+doc.uri+' '+await render(doc));};
- const normalized=html=>html.replace(/gp-[a-z0-9-]+/g,'');
- const basic=await render('```gnuplot\nplot sin(x)\n```\n```swift\nlet x = 42\n```\n```javascript\nconst x = 1;\n```\n```gnuplot\nthis is invalid gnuplot\n```');
+ const ready=async(doc,pattern=/<svg\b/)=>{const test=typeof pattern==='function'?pattern:html=>pattern.test(html);for(let i=0;i<100;i++){const html=await render(doc);if(test(html))return html;await delay(100);}throw Error('Timed out: '+(doc.uri??doc)+' '+await render(doc));};
+ // Every fence is prepared asynchronously (ADR 0010): the first render of a new fence is a placeholder.
+ const settled=async markdown=>ready(markdown,/^(?![^]*Loading gnuplot)/);
+ const normalized=html=>html.replace(/gnuplot-[0-9a-f]{8}-/g,'');
+ const basic=await settled('```gnuplot\nplot sin(x)\n```\n```swift\nlet x = 42\n```\n```javascript\nconst x = 1;\n```\n```gnuplot\nthis is invalid gnuplot\n```');
  assert.match(basic,/<svg/);assert.match(basic,/gnuplot-error/);assert.match(basic,/language-swift/);assert.match(basic,/language-javascript/);
- const attributed=await render('```gnuplot {alt="Sine curve" caption="Figure 1: <sine>"}\nplot sin(x)\n```');
+ const attributed=await settled('```gnuplot {alt="Sine curve" caption="Figure 1: <sine>"}\nplot sin(x)\n```');
  assert.match(attributed, /<figure class="gnuplot-markdown-preview">/);
  assert.match(attributed, /role="img" aria-label="Sine curve"/);
  assert.match(attributed, /<svg/);
  assert.match(attributed, /<figcaption>Figure 1: &lt;sine&gt;<\/figcaption>/);
- const tolerant=await render('```gnuplot {unknown="ignored" alt=bad caption="Still renders"}\nplot sin(x)\n```');
+ const tolerant=await settled('```gnuplot {unknown="ignored" alt=bad caption="Still renders"}\nplot sin(x)\n```');
  assert.match(tolerant, /<svg/); assert.match(tolerant, /<figcaption>Still renders<\/figcaption>/);
  assert.doesNotMatch(tolerant, /gnuplot-error/);
- const repeated=await render('```gnuplot\nplot sin(x)\n```\n```gnuplot\nplot sin(x)\n```');
- const ids=[...repeated.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);assert.equal(new Set(ids).size,ids.length);
+ // Ids are namespaced by the library, deterministically per fence body and data.
+ const repeated=await settled('```gnuplot\nplot sin(x)\n```\n```gnuplot\nplot cos(x)\n```');
+ const ids=[...repeated.matchAll(/<svg[^]*?<\/svg>/g)].flatMap(svg=>[...svg[0].matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]));assert(ids.length>0);
+ for(const id of ids)assert.match(id,/^gnuplot-[0-9a-f]{8}-/);
+ assert.equal(new Set(ids.map(id=>id.slice(0,17))).size,2,'each plot has its own prefix');
+ const printed=await settled('```gnuplot\nprint "<b>note</b>"\nplot x\n```');
+ assert.match(printed,/<div class="gnuplot-notes">&lt;b&gt;note&lt;\/b&gt;<\/div><div class="gnuplot-markdown-preview"><svg /);
+ // A runaway fence times out, and the runtime survives it.
+ const runaway=await settled('```gnuplot\nwhile (1) {}\n```\n```gnuplot\nplot tan(x)\n```');
+ assert.match(runaway,/gnuplot-error[^]*took longer than 3000 ms[^]*<svg /);
 
  assert.match(await render(a),/Loading/);
  const ha=await ready(a),hb=await ready(b);assert.notEqual(normalized(ha),normalized(hb));
@@ -41,10 +52,13 @@ exports.run=async()=>{
  await vscode.window.showTextDocument(b);
  await delay(600);observed.length=0;
  await fs.writeFile(path.join(root,'a/data.csv'),'0,0\n1,4\n2,8\n');
- for(let i=0;i<100&&!observed.some(x=>x.uri===a.uri.toString()&&x.html.includes('<svg'));i++)await delay(100);
- assert(observed.some(x=>x.uri===a.uri.toString()&&x.html.includes('<svg')),'saved dependency must refresh locked preview automatically');
- const changed=await ready(a);assert.notEqual(normalized(changed),normalized(ha));
- await fs.unlink(path.join(root,'a/data.csv'));await delay(500);assert.match(await ready(a,/gnuplot-error/),/Cannot load/);
+ // While the new data is prepared the preview keeps the old plot (stale-while-preparing), so wait
+ // for a plot that is not the one already shown.
+ const redrawn=x=>x.uri===a.uri.toString()&&x.html.includes('<svg')&&!normalized(ha).includes(normalized(x.html).trim());
+ for(let i=0;i<100&&!observed.some(redrawn);i++)await delay(100);
+ assert(observed.some(redrawn),'saved dependency must refresh locked preview automatically');
+ const changed=await ready(a,html=>/<svg\b/.test(html)&&normalized(html)!==normalized(ha));assert.notEqual(normalized(changed),normalized(ha));
+ await fs.unlink(path.join(root,'a/data.csv'));await delay(500);assert.match(await ready(a,/gnuplot-error/),/cannot load data file &quot;data.csv&quot;: file not found/);
  await fs.writeFile(path.join(root,'a/data.csv'),'0,0\n1,1\n2,2\n');await delay(500);await ready(a);
  const rename=new vscode.WorkspaceEdit();
  rename.renameFile(vscode.Uri.file(path.join(root,'a/data.csv')),vscode.Uri.file(path.join(root,'a/renamed.csv')));
@@ -52,8 +66,8 @@ exports.run=async()=>{
  const restore=new vscode.WorkspaceEdit();
  restore.renameFile(vscode.Uri.file(path.join(root,'a/renamed.csv')),vscode.Uri.file(path.join(root,'a/data.csv')));
  assert(await vscode.workspace.applyEdit(restore));await delay(500);await ready(a);
- const bad=await vscode.workspace.openTextDocument({language:'markdown',content:source});assert.match(await render(bad),/Save this Markdown/);
- for(const [name,text,pattern] of [['outside','../../outside.csv',/outside|Cannot load/],['large','large.csv',/1 MiB/]]){
+ const bad=await vscode.workspace.openTextDocument({language:'markdown',content:source});assert.match(await ready(bad,/gnuplot-error/),/save this Markdown document/);
+ for(const [name,text,pattern] of [['outside','../../outside.csv',/outside this document’s workspace folder/],['large','large.csv',/exceeds the 1048576-byte limit/]]){
   await fs.writeFile(path.join(root,'a',name+'.md'),source.replace('data.csv',text));
   if(name==='large')await fs.writeFile(path.join(root,'a/large.csv'),Buffer.alloc(1024*1024+1));
   const doc=await vscode.workspace.openTextDocument(path.join(root,'a',name+'.md'));assert.match(await ready(doc,/gnuplot-error/),pattern);
@@ -72,5 +86,5 @@ exports.run=async()=>{
   for(let i=0;i<100&&!observed.some(x=>x.uri===staticDoc.uri.toString()&&x.html.includes('<svg'));i++)await delay(100);
   assert(observed.some(x=>x.uri===staticDoc.uri.toString()&&x.html.includes('<svg')),'Open as Preview must finish loading without manual refresh');
  }
- console.log('Extension host PASS: '+vscode.version+' first load, document isolation, locked preview/save refresh, delete/recreate, untitled, traversal and size limits.');
+ console.log('Extension host PASS: '+vscode.version+' first load, notes, timeout recovery, document isolation, locked preview/save refresh, delete/recreate, untitled, traversal and size limits.');
 };
