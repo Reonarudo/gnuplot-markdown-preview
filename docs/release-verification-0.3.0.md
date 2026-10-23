@@ -1,0 +1,9 @@
+# Gnuplot Markdown Preview 0.3.0 release verification
+
+- Renders through [gnuplot-renderer](https://github.com/Reonarudo/gnuplot-renderer) 1.0.0, pinned to its release tarball (`integrity` `sha512-c5QWQQURzO4FRnLXGEaFFaEIxvcuSjBkvkYdU9Yy7TzGOIjEASzQoALfMS/0OKS/FyzJpurXkmieSSzeAAEbKg==`). The library ships unbundled under the VSIX's `node_modules`, together with `@xmldom/xmldom`. `vendor/gnuplot/` is gone. Requires VS Code 1.101.
+- Commit `c0e7274`. 19 unit tests, type checking, build and packaging pass. The packaged-VSIX host test passes on VS Code 1.143.0 and 1.101.0.
+- Cross-platform CI passed on Linux, Windows and macOS, plus the 1.101.0 minimum-version job: https://github.com/Reonarudo/gnuplot-markdown-preview/actions/runs/39771501360
+- The host test is the guard for `.vscodeignore` trimming: with the library's `vendor/` removed from the unpacked VSIX, it fails.
+- VSIX size: **1 121 910 bytes, 51 files** (the CI-built Linux artifact). `.vscodeignore` trims `*.d.ts` and `*.map` from `node_modules`.
+- Release VSIX SHA-256: `b27f6975525488db88851c0c629842c648886cac818fd6908ed8afbb89021d01`.
+- Marketplace (uploaded 2026-10-22): listed with engine `^1.101.0`; 0.2.5 stays listed with `^1.95.0`. Installed by ID in an isolated environment, its files equal the VSIX, except that VS Code adds `__metadata` to `package.json`. The host test run against that **installed** copy passes on VS Code 1.143.0 and 1.101.0: first load, notes, timeout recovery, per-document data isolation, locked-preview refresh on data save, delete/recreate and rename, untitled documents, traversal and size limits. VS Code 1.95.0 installing by ID with no version gets 0.2.5.
