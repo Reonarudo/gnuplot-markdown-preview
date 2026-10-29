@@ -146,7 +146,7 @@ Extension-host and package tests download official VS Code and require a desktop
 
 Press F5 to launch the Extension Development Host and open `examples/demo.md`. The renderer is a dependency pinned to its [release tarball](https://github.com/Reonarudo/gnuplot-renderer/releases) (`.npmrc` sets `allow-remote=root` for npm 12); it is not bundled but shipped under the VSIX's `node_modules`. The gnuplot engine and its WebAssembly build pipeline live in gnuplot-renderer.
 
-GitHub Actions checks the build and packaged rendering path. Tags create a GitHub Release containing the tested VSIX. Marketplace publishing is an explicit authenticated step; see [publishing.md](https://github.com/Reonarudo/gnuplot-markdown-preview/blob/main/docs/publishing.md).
+GitHub Actions checks the build and packaged rendering path. Tags create a GitHub Release containing the tested VSIX. Marketplace publishing is an explicit authenticated step, documented once for all the sibling previews in the maintainer's workspace (`PUBLISHING.md` beside the repositories, not in this one); each release is recorded under `docs/release-verification-<version>.md`.
 
 ## Roadmap
 

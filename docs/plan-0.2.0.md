@@ -69,4 +69,4 @@ The current upstream Markdown engine supplies `env.currentDocument` during rende
 
 - [VS Code Markdown extension API](https://code.visualstudio.com/api/extension-guides/markdown-extension)
 - [Upstream Markdown engine: document context and synchronous rendering](https://github.com/microsoft/vscode/blob/main/extensions/markdown-language-features/src/markdownEngine.ts)
-- Existing implementation: `src/markdown.ts`, `src/renderer.ts`, `src/worker.ts`; release procedure: [publishing.md](publishing.md).
+- Existing implementation: `src/markdown.ts`, `src/renderer.ts`, `src/worker.ts`; release procedure: the shared `PUBLISHING.md` beside the sibling repositories (formerly `docs/publishing.md` here).
