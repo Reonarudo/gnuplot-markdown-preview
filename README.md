@@ -28,6 +28,7 @@ Open the normal Markdown Preview to see an inline SVG plot in place of the fence
 - File-backed plots refresh when their saved data changes.
 - Normal Markdown and other fenced languages remain unchanged.
 - Localized errors with line and column, `print` output shown above the plot, and an in-memory plot cache.
+- A view toggle on every plot that shows the fence's source text instead, and remembers the choice.
 
 ## Usage
 
@@ -100,6 +101,10 @@ Files must stay inside the Markdown document's own workspace folder. Parent-rela
 
 Limits: 1 MiB per file, 4 MiB and 16 files per plot, 32 MiB of cached file snapshots, and eight concurrent loading requests. Close unused Markdown documents and run **Gnuplot: Refresh Data** if the cache budget is reached. A loading message appears the first time a plot is shown, until it is ready; while you edit a fence, its previous plot stays in view. Read errors stay local to their plot. See [examples/files.md](https://github.com/Reonarudo/gnuplot-markdown-preview/blob/main/examples/files.md).
 
+## Viewing the source
+
+Every plot carries a small button in its top corner that flips the fence between the plot and the fence's text, highlighted the way the preview shows any other code block. A flipped fence stays flipped while you edit the document, after *Markdown: Refresh Preview*, and when the preview is reopened; flip it back to see the plot again. Captions and `print` output hide with the plot. The button is a reader's control: a fence cannot be written to open in source view.
+
 ## Output and errors
 
 The preview selects the SVG terminal and output file for you. Omit `set terminal` and `set output`: direct terminal/output changes are rejected with a local error. Programs should produce one plot, or a single `set multiplot` composition. Scripts that fail, select incompatible output indirectly, or produce no complete SVG show an error block without breaking the rest of the preview.
@@ -134,9 +139,10 @@ npm test
 npm run test:extension
 npm run package
 npm run test:package
+npm run test:preview    # the view toggle in a live preview, through Playwright
 ```
 
-Extension-host and package tests download official VS Code and require a desktop display (use `xvfb-run -a` on Linux). Set `VSCODE_VERSION=1.101.0` to test the minimum version, or `VSCODE_EXECUTABLE` to use an existing application executable.
+Extension-host and package tests download official VS Code and require a desktop display (use `xvfb-run -a` on Linux). Set `VSCODE_VERSION=1.101.0` to test the minimum version, or `VSCODE_EXECUTABLE` to use an existing application executable. `test:preview` drives the VS Code that `test:extension` downloaded (macOS keyboard shortcuts) through `examples/view-toggle.md`.
 
 Press F5 to launch the Extension Development Host and open `examples/demo.md`. The renderer is a dependency pinned to its [release tarball](https://github.com/Reonarudo/gnuplot-renderer/releases) (`.npmrc` sets `allow-remote=root` for npm 12); it is not bundled but shipped under the VSIX's `node_modules`. The gnuplot engine and its WebAssembly build pipeline live in gnuplot-renderer.
 

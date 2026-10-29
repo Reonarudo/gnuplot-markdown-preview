@@ -13,7 +13,7 @@ try {
   execFileSync('unzip', ['-q', file, '-d', temp]);
   const root = join(temp, 'extension');
   for (const path of [
-    'dist/extension.js', 'media/preview.css', 'media/icon.png', 'readme.md', 'LICENSE.txt', 'THIRD_PARTY_NOTICES.md',
+    'dist/extension.js', 'media/preview.css', 'media/preview.js', 'media/icon.png', 'readme.md', 'LICENSE.txt', 'THIRD_PARTY_NOTICES.md',
     'node_modules/@reonarudo/gnuplot-renderer/package.json',
     'node_modules/@reonarudo/gnuplot-renderer/dist/worker.js',
     'node_modules/@reonarudo/gnuplot-renderer/vendor/gnuplot/gnuplot.mjs',

@@ -1,7 +1,8 @@
-# Gnuplot Markdown Preview v0.3.0
+# Gnuplot Markdown Preview v0.4.0
 
-Plots are now rendered by [gnuplot-renderer](https://github.com/Reonarudo/gnuplot-renderer) 1.0.0, the same library that renders gnuplot on reonarudo.github.io, instead of a copy inside the extension. The engine is still the unmodified gnuplot 6.0.2 compiled to WebAssembly. **Requires VS Code 1.101 or later**; older versions stay on 0.2.5.
+Every plot now carries a view toggle in its top corner that flips the fence between the plot and its source text, highlighted as the preview highlights any code block. A flipped fence stays flipped while you edit, after *Markdown: Refresh Preview* and when the preview is reopened; flip it back to see the plot again.
 
-- A runaway plot times out on its own; later plots keep rendering, without a window reload.
-- Errors give their line and column; `print` output and warnings appear above the plot.
-- Editing a fence keeps its previous plot until the new one is ready.
+- The toggle is also present on error cards and on the *Loading gnuplot plot…* placeholder, and a flip made while a fence is loading survives the swap to its plot.
+- Captions and `print` output hide with the plot in source view; a data-file refresh keeps the flip.
+- It is a reader's control; no fence attribute presets it.
+- Still requires VS Code 1.101 or later.

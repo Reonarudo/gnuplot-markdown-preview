@@ -2,7 +2,7 @@
   "name": "gnuplot-markdown-preview",
   "displayName": "Gnuplot Markdown Preview",
   "description": "Render gnuplot code fences directly in VS Code Markdown Preview using WebAssembly.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -52,6 +52,9 @@
     "markdown.previewStyles": [
       "media/preview.css"
     ],
+    "markdown.previewScripts": [
+      "media/preview.js"
+    ],
     "commands": [
       {
         "command": "gnuplotMarkdownPreview.refreshData",
@@ -66,7 +69,9 @@
     "vscode:prepublish": "npm run build",
     "package": "vsce package",
     "test:package": "node scripts/test-package.mjs",
-    "test:extension": "node scripts/test-extension.mjs"
+    "test:extension": "node scripts/test-extension.mjs",
+    "pretest:preview": "npm run build",
+    "test:preview": "node scripts/test-preview.mjs"
   },
   "devDependencies": {
     "@types/markdown-it": "14.2.0",
@@ -76,6 +81,7 @@
     "@vscode/vsce": "4.0.0",
     "esbuild": "0.28.2",
     "markdown-it": "15.0.2",
+    "playwright-core": "1.63.0",
     "tsx": "4.23.13",
     "typescript": "7.0.2"
   },

@@ -3,6 +3,8 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs/promises');
 const path=require('node:path');
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
+// A plot's <svg>, not one of the view toggle's two glyphs, which every claimed fence carries even while loading.
+const PLOT=/<svg(?! class="gnuplot-icon-)\b/;
 exports.run=async()=>{
  const root=process.env.GNUPLOT_TEST_WORKSPACE;
  assert(vscode.workspace.isTrusted,'integration fixture must be trusted');
@@ -12,6 +14,8 @@ exports.run=async()=>{
  await fs.writeFile(path.join(root,'a/data.csv'),'0,0\n1,1\n2,2\n');
  await fs.writeFile(path.join(root,'b/data.csv'),'0,0\n1,2\n2,4\n');
  const extension=vscode.extensions.getExtension('ReoX86.gnuplot-markdown-preview');assert(extension);
+ assert.deepEqual(extension.packageJSON.contributes['markdown.previewStyles'],['media/preview.css']);
+ assert.deepEqual(extension.packageJSON.contributes['markdown.previewScripts'],['media/preview.js']);
  assert.equal(path.resolve(extension.extensionPath),path.resolve(process.env.GNUPLOT_EXTENSION_PATH),'the extension under test is the one loaded');
  const api=await extension.activate();
  const observed=[];const original=api.extendMarkdownIt;
@@ -20,12 +24,25 @@ exports.run=async()=>{
  const a=await vscode.workspace.openTextDocument(path.join(root,'a/demo.md'));
  const b=await vscode.workspace.openTextDocument(path.join(root,'b/demo.md'));
  const render=doc=>vscode.commands.executeCommand('markdown.api.render',doc);
- const ready=async(doc,pattern=/<svg\b/)=>{const test=typeof pattern==='function'?pattern:html=>pattern.test(html);for(let i=0;i<100;i++){const html=await render(doc);if(test(html))return html;await delay(100);}throw Error('Timed out: '+(doc.uri??doc)+' '+await render(doc));};
+ const ready=async(doc,pattern=PLOT)=>{const test=typeof pattern==='function'?pattern:html=>pattern.test(html);for(let i=0;i<100;i++){const html=await render(doc);if(test(html))return html;await delay(100);}throw Error('Timed out: '+(doc.uri??doc)+' '+await render(doc));};
  // Every fence is prepared asynchronously (ADR 0010): the first render of a new fence is a placeholder.
  const settled=async markdown=>ready(markdown,/^(?![^]*Loading gnuplot)/);
  const normalized=html=>html.replace(/gnuplot-[0-9a-f]{8}-/g,'');
  const basic=await settled('```gnuplot\nplot sin(x)\n```\n```swift\nlet x = 42\n```\n```javascript\nconst x = 1;\n```\n```gnuplot\nthis is invalid gnuplot\n```');
  assert.match(basic,/<svg/);assert.match(basic,/gnuplot-error/);assert.match(basic,/language-swift/);assert.match(basic,/language-javascript/);
+ // The view toggle's wrapper, and its source view delegated to VS Code's own fence rule: the
+ // `<pre>` carries VS Code's shell (`dir="auto"`, not the plugin's hand-built fallback) minus
+ // the scroll-sync class and line, which only the wrapper carries.
+ assert.match(basic,/<div class="gnuplot-fence code-line" data-line="0" data-fence-key="[0-9a-f]{8}"><button type="button" class="gnuplot-toggle" aria-pressed="false" aria-label="Source view" title="Source view"><svg class="gnuplot-icon-code"/);
+ assert.match(basic,/<\/button><div class="gnuplot-rendering"><div class="gnuplot-markdown-preview"><svg /);
+ assert.match(basic,/<\/div><pre><code class="language-gnuplot" dir="auto">plot sin\(x\)\n<\/code><\/pre>\n<\/div>/);
+ assert.match(basic,/<div class="gnuplot-rendering"><div class="gnuplot-error" role="alert"><pre>[^]*?<\/pre><\/div>\n<\/div><pre><code class="language-gnuplot" dir="auto">this is invalid gnuplot\n<\/code><\/pre>\n<\/div>/,'the error card is wrapped and has its source view');
+ assert.equal((basic.match(/<div class="gnuplot-fence /g)??[]).length,2,'one wrapper per claimed fence, none for delegated ones');
+ assert.equal((basic.match(/<pre><code class="language-gnuplot" dir="auto">/g)??[]).length,2,'no sync attributes on the source <code>');
+ for(const line of ['0','9'])assert.equal((basic.match(new RegExp(`data-line="${line}"`,'g'))??[]).length,1,`one scroll-sync element for the fence at line ${line}`);
+ // A string has no slot: its first render is the wrapped placeholder, already with its source view.
+ const loading=await render('```gnuplot\nplot cos(2*x)\n```');
+ assert.match(loading,/<div class="gnuplot-rendering"><div class="gnuplot-markdown-preview"><p role="status">Loading gnuplot plot…<\/p><\/div>\n<\/div><pre><code class="language-gnuplot" dir="auto">plot cos\(2\*x\)\n<\/code><\/pre>\n<\/div>/,'the placeholder is wrapped and has its source view');
  const attributed=await settled('```gnuplot {alt="Sine curve" caption="Figure 1: <sine>"}\nplot sin(x)\n```');
  assert.match(attributed, /<figure class="gnuplot-markdown-preview">/);
  assert.match(attributed, /role="img" aria-label="Sine curve"/);
@@ -43,7 +60,7 @@ exports.run=async()=>{
  assert.match(printed,/<div class="gnuplot-notes">&lt;b&gt;note&lt;\/b&gt;<\/div><div class="gnuplot-markdown-preview"><svg /);
  // A runaway fence times out, and the runtime survives it.
  const runaway=await settled('```gnuplot\nwhile (1) {}\n```\n```gnuplot\nplot tan(x)\n```');
- assert.match(runaway,/gnuplot-error[^]*took longer than 3000 ms[^]*<svg /);
+ assert.match(runaway,/gnuplot-error[^]*took longer than 3000 ms[^]*<div class="gnuplot-markdown-preview"><svg /);
 
  assert.match(await render(a),/Loading/);
  const ha=await ready(a),hb=await ready(b);assert.notEqual(normalized(ha),normalized(hb));
@@ -54,10 +71,10 @@ exports.run=async()=>{
  await fs.writeFile(path.join(root,'a/data.csv'),'0,0\n1,4\n2,8\n');
  // While the new data is prepared the preview keeps the old plot (stale-while-preparing), so wait
  // for a plot that is not the one already shown.
- const redrawn=x=>x.uri===a.uri.toString()&&x.html.includes('<svg')&&!normalized(ha).includes(normalized(x.html).trim());
+ const redrawn=x=>x.uri===a.uri.toString()&&PLOT.test(x.html)&&!normalized(ha).includes(normalized(x.html).trim());
  for(let i=0;i<100&&!observed.some(redrawn);i++)await delay(100);
  assert(observed.some(redrawn),'saved dependency must refresh locked preview automatically');
- const changed=await ready(a,html=>/<svg\b/.test(html)&&normalized(html)!==normalized(ha));assert.notEqual(normalized(changed),normalized(ha));
+ const changed=await ready(a,html=>PLOT.test(html)&&normalized(html)!==normalized(ha));assert.notEqual(normalized(changed),normalized(ha));
  await fs.unlink(path.join(root,'a/data.csv'));await delay(500);assert.match(await ready(a,/gnuplot-error/),/cannot load data file &quot;data.csv&quot;: file not found/);
  await fs.writeFile(path.join(root,'a/data.csv'),'0,0\n1,1\n2,2\n');await delay(500);await ready(a);
  const rename=new vscode.WorkspaceEdit();
@@ -83,8 +100,8 @@ exports.run=async()=>{
   const staticDoc=await vscode.workspace.openTextDocument(path.join(root,'a/static.md'));
   await vscode.window.showTextDocument(staticDoc);observed.length=0;
   await vscode.commands.executeCommand('markdown.reopenAsPreview');
-  for(let i=0;i<100&&!observed.some(x=>x.uri===staticDoc.uri.toString()&&x.html.includes('<svg'));i++)await delay(100);
-  assert(observed.some(x=>x.uri===staticDoc.uri.toString()&&x.html.includes('<svg')),'Open as Preview must finish loading without manual refresh');
+  for(let i=0;i<100&&!observed.some(x=>x.uri===staticDoc.uri.toString()&&PLOT.test(x.html));i++)await delay(100);
+  assert(observed.some(x=>x.uri===staticDoc.uri.toString()&&PLOT.test(x.html)),'Open as Preview must finish loading without manual refresh');
  }
- console.log('Extension host PASS: '+vscode.version+' first load, notes, timeout recovery, document isolation, locked preview/save refresh, delete/recreate, untitled, traversal and size limits.');
+ console.log('Extension host PASS: '+vscode.version+' first load, view toggle wrapper and delegated source view, notes, timeout recovery, document isolation, locked preview/save refresh, delete/recreate, untitled, traversal and size limits.');
 };

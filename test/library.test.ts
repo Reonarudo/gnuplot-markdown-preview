@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import MarkdownIt from 'markdown-it';
 import { createRuntime, prepare, type FileReader, type RenderResult, type Runtime } from '@reonarudo/gnuplot-renderer';
 import { markdownPlugin } from '../src/markdown';
+import { rendering } from './helpers';
 
 // These run the real library, to pin the glue's assumptions about its output. Rendering itself
 // is gnuplot-renderer's to test.
@@ -28,7 +29,7 @@ async function page(markdown: string): Promise<string> {
 
 test('a plot is wrapped with its alt text and caption', async () => {
   const html = await page('```gnuplot {alt="Sine <curve>" caption="Figure & 1"}\nplot sin(x)\n```');
-  assert.match(html, /^<figure class="gnuplot-markdown-preview"><div role="img" aria-label="Sine &lt;curve&gt;"><svg [^>]*class="gnuplot"/);
+  assert.match(rendering(html), /^<figure class="gnuplot-markdown-preview"><div role="img" aria-label="Sine &lt;curve&gt;"><svg [^>]*class="gnuplot"/);
   assert.match(html, /<figcaption>Figure &amp; 1<\/figcaption><\/figure>/);
 });
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+- Every plot carries a view toggle in its top corner that flips the fence between the plot and its source text, highlighted as the preview highlights any code block. A flipped fence stays flipped while the document is edited, after *Markdown: Refresh Preview* and when the preview is reopened, and a flip made while a fence is still loading survives the swap to its plot. The toggle is also present on error cards and on the *Loading gnuplot plot…* placeholder; `print` output and captions hide with the plot in source view. It is a reader's control; no fence attribute presets it.
+
 ## 0.3.0
 
 - Render through [gnuplot-renderer](https://github.com/Reonarudo/gnuplot-renderer) 1.0.0, shipped in the extension, instead of a vendored copy of gnuplot. The engine is the same gnuplot 6.0.2 WebAssembly build.
